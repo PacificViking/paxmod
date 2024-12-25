@@ -40,7 +40,7 @@
     display: none !important;
 }
 
-#tabbrowser-arrowscrollbox::part(scrollbox) {
+#tabbrowser-arrowscrollbox::part(scrollbox-flexbox) {
     width: 100% !important;
     display: flex !important;
     flex-wrap: wrap !important;
@@ -98,7 +98,7 @@
 }
 
 /* Need specific selector here to overrule !important from browser style */
-#titlebar #tabbrowser-tabs > #tabbrowser-arrowscrollbox > .tabbrowser-tab[pinned] {
+#navigator-toolbox #tabbrowser-tabs > #tabbrowser-arrowscrollbox > .tabbrowser-tab[pinned] {
     flex-grow: 0 !important;
     width: initial !important;
     min-width: initial !important;
@@ -117,12 +117,12 @@
 
 /********** Titlebar **********/
 
-:root[tabsintitlebar] #titlebar .titlebar-buttonbox-container {
+#navigator-toolbox .titlebar-buttonbox-container {
     /* Give users an option to hide the min/max/close buttions */
     display: var(--paxmod-titlebar-display);
 }
 
-:root[tabsintitlebar] #titlebar .titlebar-buttonbox {
+#navigator-toolbox .titlebar-buttonbox {
     /* Otherwise, the inline min/max/close buttons on Windows (and maybe MacOS)
      * will stretch to the full height of multiple tab rows */
     display: inline-block;
