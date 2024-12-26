@@ -107,8 +107,12 @@ function patch(win) {
 
   // fix arrowscrollbox > scrollbox part > slot so that it has a part name
   if (arrowscrollbox) {
-    console.log(arrowscrollbox.shadowRoot)
-    arrowscrollbox.shadowRoot.querySelector('scrollbox > slot').setAttribute('part', 'scrollbox-flexbox')
+    let scrollboxFlexbox = arrowscrollbox.shadowRoot.querySelector('scrollbox > slot')
+    if (scrollboxFlexbox) {
+      scrollboxFlexbox.setAttribute('part', 'scrollbox-flexbox')
+    } else {
+      console.warn('Paxmod: scrollbox flexbox not found')
+    }
   } else {
     console.warn('Paxmod: arrowscrollbox not found')
   }
