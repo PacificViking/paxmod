@@ -23,6 +23,7 @@ It works in the new Proton UI and alongside any themes. You can configure the fo
   | --- | --- |
   | `xpinstall.signatures.required` | `false` [(Why?)](#why-cant-i-install-paxmod-as-a-verified-extension-through-mozilla) |
   | `extensions.experiments.enabled` | `true` |
+  | `browser.tabs.groups.enabled` | `false` (Does not work with drag-and-drop)|
 
 - Install Paxmod. (Download the `.xpi` file from [here](https://github.com/numirias/paxmod/releases/latest) and load it in Firefox.)
 
