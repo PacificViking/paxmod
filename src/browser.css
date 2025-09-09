@@ -9,6 +9,11 @@
     display: none !important;
 }
 
+#pinned-drop-indicator {
+    /* Hide pinned indicator since it won't pin anyways */
+    display: none !important;
+}
+
 #TabsToolbar #tabs-newtab-button {
     margin: 0 !important;
     display: var(--paxmod-display-newtab) !important;
@@ -42,7 +47,7 @@
     display: none !important;
 }
 
-#tabbrowser-arrowscrollbox::part(scrollbox-flexbox) {
+#tabbrowser-arrowscrollbox::part(items-wrapper) {
     width: 100% !important;
     display: flex !important;
     flex-wrap: wrap !important;
@@ -64,6 +69,7 @@
     max-width: var(--paxmod-max-tab-size) !important;
     /* Explicit min-height rule is only needed for non-Proton UI */
     min-height: var(--tab-min-height) !important;
+    height: var(--tab-min-height) !important;
     flex-grow: 1;
     /* Can't completely disable transitions, otherwise tabs have small pixel
      * offsets after closing some tabs */

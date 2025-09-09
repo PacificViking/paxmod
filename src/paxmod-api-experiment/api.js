@@ -35,7 +35,7 @@ function patch(win) {
     console.warn('Paxmod: tab box not found in this win')
     return
   }
-  if (tabsProto._positionPinnedTabs_orig) {
+  if (tabsProto.on_drop_orig) {
     console.warn('Paxmod: tab box already patched in this win')
     return
   }
@@ -58,22 +58,30 @@ function patch(win) {
     tabsProto[name + '_orig'] = tabsProto[name]
     tabsProto[name] = f
   }
-  patchMethod('_positionPinnedTabs', function() {
-    this._positionPinnedTabs_orig()
-    // Remove visual offset of pinned tabs
-    this.style.paddingInlineStart = ''
-    for (let tab of this.allTabs) {
-      tab.style.marginInlineStart = ''
-    }
-  })
+  // patchMethod('_positionPinnedTabs', function() {
+  //   this._positionPinnedTabs_orig()
+  //   // Remove visual offset of pinned tabs
+  //   this.style.paddingInlineStart = ''
+  //   for (let tab of this.allTabs) {
+  //     tab.style.marginInlineStart = ''
+  //   }
+  // })
   patchMethod('on_drop', function(event) {
     let dt = event.dataTransfer
     if (dt.dropEffect !== 'move') {
       return this.on_drop_orig(event)
     }
     let draggedTab = dt.mozGetDataAt('application/x-moz-tabbrowser-tab', 0)
-    draggedTab._dragData.animDropIndex = dropIndex(this.allTabs, event)
-    return this.on_drop_orig(event)
+    // draggedTab._dragData.animDropIndex = dropIndex(this.allTabs, event)
+    var val = dropIndex(this.allTabs, event);
+
+    var movingTabs = draggedTab._dragData.movingTabs;
+    movingTabs?.reverse();
+    for (let tab of movingTabs) {
+      win.gBrowser.moveTabTo(tab, {elementIndex: val}, null);
+    }
+    // return this.on_drop_orig(event)
+    return;
   })
   patchMethod('on_dragover', function(event) {
     let dt = event.dataTransfer
@@ -83,6 +91,7 @@ function patch(win) {
     let draggedTab = dt.mozGetDataAt('application/x-moz-tabbrowser-tab', 0)
     let movingTabs = draggedTab._dragData.movingTabs
     draggedTab._dragData.animDropIndex = dropIndex(this.allTabs, event)
+    // var val = dropIndex(this.allTabs, event);
     this.on_dragover_orig(event)
     // Reset rules that visualize dragging because they don't work in multi-row
     for (let tab of this.allTabs) {
@@ -95,7 +104,7 @@ function patch(win) {
     this.setAttribute('overflow', 'true')
     this._handleTabSelect_orig(aInstant)
   })
-  win.document.querySelector('#tabbrowser-tabs')._positionPinnedTabs()
+  // win.document.querySelector('#tabbrowser-tabs')._positionPinnedTabs()
   // Make sure the arrowscrollbox doesn't swallow mouse wheel events, so they
   // get propagated to the tab list, allowing the user to scroll up and down
   let arrowscrollbox = win.document.querySelector('#tabbrowser-arrowscrollbox')
@@ -109,7 +118,7 @@ function patch(win) {
   if (arrowscrollbox) {
     let scrollboxFlexbox = arrowscrollbox.shadowRoot.querySelector('scrollbox > slot')
     if (scrollboxFlexbox) {
-      scrollboxFlexbox.setAttribute('part', 'scrollbox-flexbox')
+      scrollboxFlexbox.setAttribute('part', 'items-wrapper')
     } else {
       console.warn('Paxmod: scrollbox flexbox not found')
     }
@@ -120,7 +129,7 @@ function patch(win) {
 
 function unpatch(win) {
   var tabsProto = win.customElements.get('tabbrowser-tabs').prototype
-  if (!tabsProto._positionPinnedTabs_orig) {
+  if (!tabsProto.on_drop_orig) {
     console.warn('Paxmod: tab box not patched')
     return
   }
@@ -128,7 +137,7 @@ function unpatch(win) {
     tabsProto[name] = tabsProto[name + '_orig']
     delete tabsProto[name + '_orig']
   }
-  unpatchMethod('_positionPinnedTabs')
+  // unpatchMethod('_positionPinnedTabs')
   unpatchMethod('on_drop')
   unpatchMethod('on_dragover')
   unpatchMethod('_handleTabSelect')
