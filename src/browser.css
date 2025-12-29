@@ -67,6 +67,8 @@
     width: var(--paxmod-tab-size) !important;
     min-width: var(--paxmod-min-tab-size) !important;
     max-width: var(--paxmod-max-tab-size) !important;
+    left: 0 !important;
+
     /* Explicit min-height rule is only needed for non-Proton UI */
     min-height: var(--tab-min-height) !important;
     height: var(--tab-min-height) !important;
@@ -76,6 +78,10 @@
     transition-duration: .1ms !important;
     scroll-snap-align: start !important;
     scroll-margin: var(--tab-min-height) !important;
+}
+
+.tabbrowser-tab[dragtarget=""] {
+    opacity: 0;
 }
 
 .tabbrowser-tab .tab-label-container {
