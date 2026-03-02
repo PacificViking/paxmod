@@ -35,21 +35,30 @@ function patch(win) {
     console.warn('Paxmod: tab box not found in this win')
     return
   }
-  if (tabsProto.on_drop_orig) {
+  if (tabsProto.on_dragover_orig) {
     console.warn('Paxmod: tab box already patched in this win')
     return
   }
-  function dropIndex(tabs, event) {
+  function dropIndex(event) {
+    var tabbrowserTabs = event.target
+    while (tabbrowserTabs.id != 'tabbrowser-tabs') {
+        // keep trying to find tabbrowser-tabs above the event
+        tabbrowserTabs = tabbrowserTabs.parentElement
+    }
+    // var tabs = tabbrowserTabs.allTabs
+    var tabs = tabbrowserTabs.dragAndDropElements
     for (let tab of tabs) {
       let rect = tab.getBoundingClientRect()
       if (event.screenY >= tab.screenY &&
           event.screenY < (tab.screenY + rect.height) &&
           event.screenX < (tab.screenX + (rect.width / 2))) {
         // First tab right of the cursor, and in the cursor's row
+        // console.log(tabs.indexOf(tab))
         return tabs.indexOf(tab)
       }
       if (event.screenY <= tab.screenY) {
         // Entered a new tab row
+        // console.log(tabs.indexOf(tab))
         return tabs.indexOf(tab)
       }
     }
@@ -58,6 +67,11 @@ function patch(win) {
     tabsProto[name + '_orig'] = tabsProto[name]
     tabsProto[name] = f
   }
+  // function dragDropPatchMethod(name, f) {
+  //   tabsProto.tabDragAndDrop[name + '_orig'] = tabsProto.tabDragAndDrop[name]
+  //   tabsProto.tabDragAndDrop[name] = f
+  // }
+  // dragDropPatchMethod('_getDropIndex', dropIndex)
   // patchMethod('_positionPinnedTabs', function() {
   //   this._positionPinnedTabs_orig()
   //   // Remove visual offset of pinned tabs
@@ -66,14 +80,25 @@ function patch(win) {
   //     tab.style.marginInlineStart = ''
   //   }
   // })
+
+// https://searchfox.org/firefox-main/source/browser/components/tabbrowser/content/drag-and-drop.js
   patchMethod('on_drop', function(event) {
+    // console.log(this.dragAndDropElements)
+    // this.tabDragAndDrop['_getDropIndex_orig'] = this.tabDragAndDrop['_getDropIndex']
+    // this.tabDragAndDrop['_getDropIndex'] = dropIndex
+    // console.log(this.tabDragAndDrop._getDropIndex(event))
+    // this.on_drop_orig(event)
+    // this.tabDragAndDrop['_getDropIndex'] = this.tabDragAndDrop['_getDropIndex_orig']
+    // delete this.tabDragAndDrop['_getDropIndex_orig']
+    // return;
+
     let dt = event.dataTransfer
     if (dt.dropEffect !== 'move') {
       return this.on_drop_orig(event)
     }
     let draggedTab = dt.mozGetDataAt('application/x-moz-tabbrowser-tab', 0)
-    // draggedTab._dragData.animDropIndex = dropIndex(this.allTabs, event)
-    var val = dropIndex(this.allTabs, event);
+    draggedTab._dragData.animDropIndex = dropIndex(event)
+    var val = dropIndex(event);
 
     var movingTabs = draggedTab._dragData.movingTabs;
     movingTabs?.reverse();
@@ -85,12 +110,12 @@ function patch(win) {
   })
   patchMethod('on_dragover', function(event) {
     let dt = event.dataTransfer
-    if (dt.dropEffect !== 'move') {
-      return this.on_dragover_orig(event)
-    }
+    // if (dt.dropEffect !== 'move') {
+    //   return this.on_dragover_orig(event)
+    // }
     let draggedTab = dt.mozGetDataAt('application/x-moz-tabbrowser-tab', 0)
     let movingTabs = draggedTab._dragData.movingTabs
-    draggedTab._dragData.animDropIndex = dropIndex(this.allTabs, event)
+    draggedTab._dragData.animDropIndex = dropIndex(event)
     // var val = dropIndex(this.allTabs, event);
     this.on_dragover_orig(event)
     // Reset rules that visualize dragging because they don't work in multi-row
@@ -129,7 +154,7 @@ function patch(win) {
 
 function unpatch(win) {
   var tabsProto = win.customElements.get('tabbrowser-tabs').prototype
-  if (!tabsProto.on_drop_orig) {
+  if (!tabsProto.on_dragover_orig) {
     console.warn('Paxmod: tab box not patched')
     return
   }
@@ -137,8 +162,13 @@ function unpatch(win) {
     tabsProto[name] = tabsProto[name + '_orig']
     delete tabsProto[name + '_orig']
   }
+  // function dragDropUnpatchMethod(name) {
+  //   tabsProto.tabDragAndDrop[name] = tabsProto.tabDragAndDrop[name + '_orig']
+  //   delete tabsProto.tabDragAndDrop[name + '_orig']
+  // }
   // unpatchMethod('_positionPinnedTabs')
   unpatchMethod('on_drop')
+  // dragDropUnpatchMethod('_getDropIndex')
   unpatchMethod('on_dragover')
   unpatchMethod('_handleTabSelect')
   let arrowscrollbox = win.document.querySelector('#tabbrowser-arrowscrollbox')
