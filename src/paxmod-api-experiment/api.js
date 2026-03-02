@@ -81,22 +81,20 @@ function patch(win) {
   //   }
   // })
 
-// https://searchfox.org/firefox-main/source/browser/components/tabbrowser/content/drag-and-drop.js
+  // https://searchfox.org/firefox-main/source/browser/components/tabbrowser/content/drag-and-drop.js
   patchMethod('on_drop', function(event) {
-    // console.log(this.dragAndDropElements)
-    // this.tabDragAndDrop['_getDropIndex_orig'] = this.tabDragAndDrop['_getDropIndex']
-    // this.tabDragAndDrop['_getDropIndex'] = dropIndex
-    // console.log(this.tabDragAndDrop._getDropIndex(event))
-    // this.on_drop_orig(event)
-    // this.tabDragAndDrop['_getDropIndex'] = this.tabDragAndDrop['_getDropIndex_orig']
-    // delete this.tabDragAndDrop['_getDropIndex_orig']
-    // return;
-
     let dt = event.dataTransfer
     if (dt.dropEffect !== 'move') {
       return this.on_drop_orig(event)
     }
     let draggedTab = dt.mozGetDataAt('application/x-moz-tabbrowser-tab', 0)
+
+    // Cross-window drop: let Firefox's original handler use adoptTab
+    if (draggedTab.ownerGlobal !== win) {
+      return this.on_drop_orig(event)
+    }
+
+    // Same window: use custom drop index logic for multi-row support
     draggedTab._dragData.animDropIndex = dropIndex(event)
     var val = dropIndex(event);
 
@@ -105,7 +103,6 @@ function patch(win) {
     for (let tab of movingTabs) {
       win.gBrowser.moveTabTo(tab, {elementIndex: val}, null);
     }
-    // return this.on_drop_orig(event)
     return;
   })
   patchMethod('on_dragover', function(event) {
